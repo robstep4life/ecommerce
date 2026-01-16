@@ -1,0 +1,5 @@
+ALTER TABLE orders
+  ADD COLUMN stripe_session_id VARCHAR(255) NULL,
+  ADD COLUMN stripe_payment_intent_id VARCHAR(255) NULL;
+
+CREATE INDEX idx_orders_stripe_session_id ON orders (stripe_session_id);

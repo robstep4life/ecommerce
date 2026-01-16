@@ -1,0 +1,3 @@
+ALTER TABLE products
+  ADD COLUMN image_url VARCHAR(500) NULL,
+  ADD COLUMN category  VARCHAR(100) NULL;

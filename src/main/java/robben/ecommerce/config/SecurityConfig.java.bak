@@ -1,0 +1,60 @@
+package robben.ecommerce.config;
+
+import robben.ecommerce.security.JwtAuthFilter;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity
+public class SecurityConfig {
+
+    private final JwtAuthFilter jwtAuthFilter;
+    private final AuthenticationProvider authenticationProvider;
+
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter,
+                          AuthenticationProvider authenticationProvider) {
+        this.jwtAuthFilter = jwtAuthFilter;
+        this.authenticationProvider = authenticationProvider;
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                // ✅ API + JWT: disable CSRF (otherwise POST/PUT/DELETE can 403)
+                .csrf(csrf -> csrf.disable())
+
+                // ✅ Stateless API
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                // ✅ Auth provider comes from AuthBeansConfig (don’t redefine it here)
+                .authenticationProvider(authenticationProvider)
+
+                .authorizeHttpRequests(auth -> auth
+                        // Public
+                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/products/**").permitAll()
+
+                        // Stripe webhook must be public
+                        .requestMatchers("/payments/stripe/webhook").permitAll()
+
+                        // Payments checkout requires login
+                        .requestMatchers("/payments/checkout/**").authenticated()
+
+                        // Everything else requires login
+                        .anyRequest().authenticated()
+                )
+
+                // ✅ JWT filter
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+}

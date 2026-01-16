@@ -1,0 +1,15 @@
+CREATE TABLE IF NOT EXISTS products (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  sku VARCHAR(64) NOT NULL,
+  name VARCHAR(200) NOT NULL,
+  description TEXT NULL,
+  price DECIMAL(12,2) NOT NULL,
+  inventory INT NOT NULL,
+  active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  CONSTRAINT uk_products_sku UNIQUE (sku),
+  INDEX idx_products_name (name),
+  INDEX idx_products_active (active)
+);
